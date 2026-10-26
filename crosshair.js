@@ -180,3 +180,32 @@ document.querySelectorAll('button').forEach(btn => {
   });
 
 });
+
+document.addEventListener('mousemove', function(e) {
+
+  const hud = document.getElementById('hud');
+  const c = document.getElementById('customCrosshair');
+
+  if (!hud || !c) return;
+
+  const r = hud.getBoundingClientRect();
+
+  const overHud =
+    e.clientX >= r.left &&
+    e.clientX <= r.right &&
+    e.clientY >= r.top &&
+    e.clientY <= r.bottom;
+
+  if (overHud) {
+    c.style.display = 'none';
+    document.body.style.cursor = 'default';
+  } else {
+    const menu = document.getElementById('message');
+
+    if (menu && getComputedStyle(menu).display === 'none') {
+      c.style.display = 'block';
+      document.body.style.cursor = 'none';
+    }
+  }
+
+});
