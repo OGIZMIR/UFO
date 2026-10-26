@@ -8,8 +8,8 @@ if(phase!==1)return false;
 var p=(t%12000)/12000,
 xx=W*(.12+p*.72),
 yy=H*.775+Math.sin(p*18)*3,
-hitWidth=(p<.55?28:24)*tap,
-hitHeight=24*tap;
+hitWidth=120*tap,
+hitHeight=120*tap;
 
 if(
 Math.abs(px-xx)<=hitWidth &&
