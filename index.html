@@ -110,4 +110,54 @@ reddot.style.left=e.clientX+'px';
 reddot.style.top=e.clientY+'px';
 });
 </script>
-<script type="module" src="online-highscores.js"></script></body></html>
+<script type="module" src="online-highscores.js"></script>
+<div id="diagPanel" style="
+display:none;
+position:fixed;
+right:20px;
+top:20px;
+z-index:999999;
+padding:15px;
+background:rgba(0,0,0,.9);
+border:1px solid #44dfff;
+border-radius:12px;
+color:#fff;
+font:12px monospace;
+max-width:350px;
+">
+<b>UFO-DIAGNOSE</b><br>
+Version: 1.0.0<br>
+Firebase: <span id="diagFirebase">Prüfung...</span><br>
+Highscore: <span id="diagScore">Prüfung...</span><br>
+URL: <span id="diagUrl"></span><br>
+</div>
+
+<script>
+document.addEventListener('keydown',function(e){
+
+ if(e.code==='F2'){
+   e.preventDefault();
+
+   const p=document.getElementById('diagPanel');
+
+   p.style.display=
+     p.style.display==='block'
+     ? 'none'
+     : 'block';
+
+   document.getElementById('diagUrl').textContent=
+     location.hostname;
+
+   document.getElementById('diagFirebase').textContent=
+     typeof firebaseConfig!=='undefined'
+     ? 'ONLINE'
+     : 'NICHT GELADEN';
+
+   document.getElementById('diagScore').textContent=
+     localStorage.getItem('ufoScores')
+     ? 'VORHANDEN'
+     : 'LEER';
+ }
+});
+</script>
+</body></html>
