@@ -33,7 +33,33 @@ const database = getDatabase(app);
 let currentUser = null;
 let pendingScore = null;
 let onlineScores = [];
+
 let rendering = false;
+
+window.UFOOnlineDiagnostics = {
+  moduleVersion: "1.1.0",
+  firebaseConfigured: true,
+  authStatus: "WIRD VERBUNDEN",
+  userId: null,
+  databaseStatus: "WIRD VERBUNDEN",
+  onlineScoreCount: 0,
+  loadedTopScoreCount: 0,
+  lastError: null,
+  lastUpdate: null
+};
+
+function updateOnlineDiagnostics(values) {
+  Object.assign(window.UFOOnlineDiagnostics, values, {
+    lastUpdate: new Date().toISOString()
+  });
+
+  window.dispatchEvent(
+    new CustomEvent("ufo-online-diagnostics-update", {
+      detail: window.UFOOnlineDiagnostics
+    })
+  );
+}
+
 
 const originalSetItem = Storage.prototype.setItem;
 
@@ -142,6 +168,12 @@ async function uploadPendingScore() {
   } catch (error) {
     pendingScore = scoreToUpload;
     console.error("Online-Highscore konnte nicht gespeichert werden.", error);
+
+    updateOnlineDiagnostics({
+      databaseStatus: "SCHREIBFEHLER",
+      lastError: error.code || error.message || String(error)
+    });
+
     setStatus("Speichern fehlgeschlagen");
   }
 }
@@ -272,11 +304,23 @@ function startOnlineLeaderboard() {
         })
         .slice(0, 10);
 
+      updateOnlineDiagnostics({
+        databaseStatus: "ONLINE",
+        loadedTopScoreCount: onlineScores.length,
+        lastError: null
+      });
+
       setStatus("Online verbunden");
       renderOnlineScores();
     },
     function (error) {
       console.error("Online-Highscores konnten nicht geladen werden.", error);
+
+      updateOnlineDiagnostics({
+        databaseStatus: "FEHLER",
+        lastError: error.code || error.message || String(error)
+      });
+
       setStatus("Highscores nicht erreichbar");
     }
   );
@@ -335,12 +379,48 @@ onAuthStateChanged(auth, function (user) {
   currentUser = user || null;
 
   if (currentUser) {
+    updateOnlineDiagnostics({
+      authStatus: "ANONYM ANGEMELDET",
+      userId: currentUser.uid
+    });
+
     setStatus("Online verbunden");
     uploadPendingScore();
+  } else {
+    updateOnlineDiagnostics({
+      authStatus: "NICHT ANGEMELDET",
+      userId: null
+    });
   }
 });
 
 signInAnonymously(auth).catch(function (error) {
   console.error("Anonyme Anmeldung fehlgeschlagen.", error);
+
+  updateOnlineDiagnostics({
+    authStatus: "ANMELDUNG FEHLGESCHLAGEN",
+    lastError: error.code || error.message || String(error)
+  });
+
   setStatus("Anmeldung fehlgeschlagen");
 });
+
+
+onValue(
+  ref(database, "highscores"),
+  function (snapshot) {
+    updateOnlineDiagnostics({
+      databaseStatus: "ONLINE",
+      onlineScoreCount: snapshot.size,
+      lastError: null
+    });
+  },
+  function (error) {
+    console.error("Online-Score-Anzahl konnte nicht geladen werden.", error);
+
+    updateOnlineDiagnostics({
+      databaseStatus: "FEHLER",
+      lastError: error.code || error.message || String(error)
+    });
+  }
+);
