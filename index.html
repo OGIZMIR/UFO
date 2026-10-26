@@ -26,7 +26,7 @@ sound('jet');
 saveScore();
 
 box.style.display='flex';
-box.innerHTML='<div class="card"><div class="alien" aria-label="tanzendes Alien">👽</div><h1>MISSION VERLOREN</h1><p>Du hast ein Tier am Boden getroffen.</p><button id="start">NOCH EINMAL</button><div class="scores"><b>HIGHSCORES</b><ol id="scores"></ol></div></div>';
+box.innerHTML='<div class="card"><div class="alien" aria-label="tanzendes Alien">👽</div><h1>MISSION VERLOREN</h1><p>Du hast ein Tier am Boden getroffen.</p><button id="start">NOCH EINMAL</button><button id="menu" style="margin-left:10px">ZUM STARTMENÜ</button><div class="scores"><b>HIGHSCORES</b><ol id="scores"></ol></div></div>';
 
 document.getElementById('start').onclick=reset;
 showScores();
