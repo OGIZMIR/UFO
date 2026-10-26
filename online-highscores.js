@@ -313,18 +313,29 @@ onlineStyle.textContent = `
 
 document.head.appendChild(onlineStyle);
 
+let menuRenderScheduled = false;
+
 const menuObserver = new MutationObserver(function () {
-  ensureOnlineScoreCard();
-  renderOnlineScores();
+  if (menuRenderScheduled) {
+    return;
+  }
+
+  menuRenderScheduled = true;
+
+  window.requestAnimationFrame(function () {
+    menuRenderScheduled = false;
+    ensureOnlineScoreCard();
+    renderOnlineScores();
+  });
 });
 
 const messageElement = document.getElementById("message");
 
 if (messageElement) {
   menuObserver.observe(messageElement, {
-    childList: true,
-    subtree: true
-  });
+  childList: true,
+  subtree: false
+});
 }
 
 ensureOnlineScoreCard();
