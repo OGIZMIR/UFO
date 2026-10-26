@@ -81,7 +81,32 @@ transform:translate(-50%,-50%);
 const reddot=document.getElementById('reddot');
 
 document.addEventListener('mousemove',function(e){
-reddot.style.display='block';reddot.style.left=e.clientX+'px';
+
+const menu=document.getElementById('message');
+const hud=document.getElementById('hud');
+
+if(menu && getComputedStyle(menu).display!=='none'){
+reddot.style.display='none';
+return;
+}
+
+if(hud){
+const r=hud.getBoundingClientRect();
+
+if(
+e.clientX>=r.left &&
+e.clientX<=r.right &&
+e.clientY>=r.top &&
+e.clientY<=r.bottom
+){
+reddot.style.display='none';
+return;
+}
+}
+
+reddot.style.display='block';
+reddot.style.left=e.clientX+'px';
+
 reddot.style.top=e.clientY+'px';
 });
 </script>
