@@ -156,3 +156,27 @@ if (hud) {
     }
   });
 }
+
+document.querySelectorAll('button').forEach(btn => {
+
+  btn.addEventListener('mouseenter', () => {
+    const c = document.getElementById('customCrosshair');
+    if (c) c.style.display = 'none';
+    document.body.style.cursor = 'default';
+  });
+
+  btn.addEventListener('mouseleave', () => {
+    const c = document.getElementById('customCrosshair');
+    const menu = document.getElementById('message');
+
+    if (
+      c &&
+      menu &&
+      getComputedStyle(menu).display === 'none'
+    ) {
+      c.style.display = 'block';
+      document.body.style.cursor = 'none';
+    }
+  });
+
+});
