@@ -1,22 +1,19 @@
 (function () {
+  'use strict';
+
   const canvas = document.getElementById('game');
   const menu = document.getElementById('message');
+  const hud = document.getElementById('hud');
 
   const crosshair = document.createElement('div');
   crosshair.id = 'customCrosshair';
-
-  const horizontal = document.createElement('span');
-  horizontal.className = 'crosshairHorizontal';
-
-  const vertical = document.createElement('span');
-  vertical.className = 'crosshairVertical';
-
-  const dot = document.createElement('span');
-  dot.className = 'crosshairDot';
-
-  crosshair.appendChild(horizontal);
-  crosshair.appendChild(vertical);
-  crosshair.appendChild(dot);
+  crosshair.innerHTML = `
+    <span class="crosshairLine crosshairLineTop"></span>
+    <span class="crosshairLine crosshairLineRight"></span>
+    <span class="crosshairLine crosshairLineBottom"></span>
+    <span class="crosshairLine crosshairLineLeft"></span>
+    <span class="crosshairDot"></span>
+  `;
   document.body.appendChild(crosshair);
 
   const style = document.createElement('style');
@@ -25,8 +22,8 @@
       position: fixed;
       left: 50%;
       top: 50%;
-      width: 46px;
-      height: 46px;
+      width: 42px;
+      height: 42px;
       display: none;
       pointer-events: none;
       z-index: 999999;
@@ -35,53 +32,46 @@
       border-radius: 50%;
       box-shadow:
         0 0 8px rgba(0, 217, 255, 0.95),
-        inset 0 0 6px rgba(0, 217, 255, 0.55);
+        inset 0 0 5px rgba(0, 217, 255, 0.45);
     }
 
-    #customCrosshair::before,
-    #customCrosshair::after {
-      content: "";
+    #customCrosshair .crosshairLine {
       position: absolute;
-      background: #b9f8ff;
-      box-shadow: 0 0 7px #00d9ff;
+      display: block;
+      background: #c9fbff;
+      box-shadow: 0 0 6px #00d9ff;
     }
 
-    #customCrosshair::before {
+    #customCrosshair .crosshairLineTop {
       left: 50%;
-      top: -8px;
+      top: -9px;
       width: 2px;
-      height: 62px;
+      height: 14px;
       transform: translateX(-50%);
     }
 
-    #customCrosshair::after {
-      left: -8px;
+    #customCrosshair .crosshairLineRight {
+      right: -9px;
       top: 50%;
-      width: 62px;
+      width: 14px;
       height: 2px;
       transform: translateY(-50%);
     }
 
-    #customCrosshair .crosshairHorizontal {
-      position: absolute;
-      left: 8px;
-      right: 8px;
-      top: 50%;
-      height: 6px;
-      transform: translateY(-50%);
-      background: #01030c;
-      z-index: 1;
+    #customCrosshair .crosshairLineBottom {
+      left: 50%;
+      bottom: -9px;
+      width: 2px;
+      height: 14px;
+      transform: translateX(-50%);
     }
 
-    #customCrosshair .crosshairVertical {
-      position: absolute;
-      top: 8px;
-      bottom: 8px;
-      left: 50%;
-      width: 6px;
-      transform: translateX(-50%);
-      background: #01030c;
-      z-index: 1;
+    #customCrosshair .crosshairLineLeft {
+      left: -9px;
+      top: 50%;
+      width: 14px;
+      height: 2px;
+      transform: translateY(-50%);
     }
 
     #customCrosshair .crosshairDot {
@@ -90,11 +80,33 @@
       top: 50%;
       width: 5px;
       height: 5px;
-      z-index: 2;
       transform: translate(-50%, -50%);
       border-radius: 50%;
-      background: #ff3b3b;
-      box-shadow: 0 0 8px #ff0000;
+      background: #ff3737;
+      box-shadow: 0 0 7px #ff0000;
+    }
+
+    body.gameAimMode,
+    body.gameAimMode canvas {
+      cursor: none !important;
+    }
+
+    body.hudPointerMode,
+    body.hudPointerMode canvas,
+    body.hudPointerMode #hud,
+    body.hudPointerMode #hud * {
+      cursor: default !important;
+    }
+
+    body.hudPointerMode #pause,
+    body.hudPointerMode #quit {
+      cursor: pointer !important;
+    }
+
+    #hud,
+    #hud * {
+      position: relative;
+      z-index: 1000000;
     }
   `;
   document.head.appendChild(style);
@@ -103,109 +115,103 @@
     return menu && getComputedStyle(menu).display === 'none';
   }
 
-  function updateMode() {
-    const playing = gameIsRunning();
+  function isInHudZone(clientX, clientY) {
+    if (!hud) return false;
 
-    crosshair.style.display = playing ? 'block' : 'none';
+    const rect = hud.getBoundingClientRect();
+    const safety = 12;
 
-    if (canvas) {
-      canvas.style.cursor = playing ? 'none' : 'default';
-    }
-
-    document.body.style.cursor = playing ? 'none' : 'default';
+    return (
+      clientX >= rect.left - safety &&
+      clientX <= rect.right + safety &&
+      clientY >= rect.top - safety &&
+      clientY <= rect.bottom + safety
+    );
   }
 
-  document.addEventListener('pointermove', function (event) {
-    updateMode();
+  function setHudMode() {
+    crosshair.style.display = 'none';
+    document.body.classList.remove('gameAimMode');
+    document.body.classList.add('hudPointerMode');
 
+    if (canvas) {
+      canvas.style.cursor = 'default';
+    }
+  }
+
+  function setMenuMode() {
+    crosshair.style.display = 'none';
+    document.body.classList.remove('gameAimMode');
+    document.body.classList.remove('hudPointerMode');
+
+    if (canvas) {
+      canvas.style.cursor = 'default';
+    }
+
+    document.body.style.cursor = 'default';
+  }
+
+  function setAimMode(clientX, clientY) {
+    crosshair.style.left = clientX + 'px';
+    crosshair.style.top = clientY + 'px';
+    crosshair.style.display = 'block';
+
+    document.body.classList.remove('hudPointerMode');
+    document.body.classList.add('gameAimMode');
+
+    document.body.style.cursor = 'none';
+
+    if (canvas) {
+      canvas.style.cursor = 'none';
+    }
+  }
+
+  function updatePointer(event) {
     if (!gameIsRunning()) {
+      setMenuMode();
       return;
     }
 
-    crosshair.style.left = event.clientX + 'px';
-    crosshair.style.top = event.clientY + 'px';
-  });
+    if (isInHudZone(event.clientX, event.clientY)) {
+      setHudMode();
+      return;
+    }
 
-  document.addEventListener('pointerdown', updateMode);
+    setAimMode(event.clientX, event.clientY);
+  }
+
+  document.addEventListener('pointermove', updatePointer, true);
+  document.addEventListener('mousemove', updatePointer, true);
+
+  if (hud) {
+    hud.addEventListener('pointerenter', setHudMode, true);
+    hud.addEventListener('mouseenter', setHudMode, true);
+
+    hud.querySelectorAll('button').forEach(function (button) {
+      button.addEventListener('pointerenter', setHudMode, true);
+      button.addEventListener('mouseenter', setHudMode, true);
+      button.addEventListener('focus', setHudMode, true);
+    });
+  }
 
   if (menu) {
-    new MutationObserver(updateMode).observe(menu, {
+    new MutationObserver(function () {
+      if (!gameIsRunning()) {
+        setMenuMode();
+      }
+    }).observe(menu, {
       attributes: true,
       attributeFilter: ['style', 'class']
     });
   }
 
-  window.setInterval(updateMode, 250);
-  updateMode();
+  window.addEventListener('blur', function () {
+    crosshair.style.display = 'none';
+  });
+
+  document.addEventListener('mouseleave', function () {
+    crosshair.style.display = 'none';
+  });
+
+  setMenuMode();
 })();
-
-const hud = document.getElementById('hud');
-
-if (hud) {
-  hud.addEventListener('mouseenter', () => {
-    if (crosshair) crosshair.style.display = 'none';
-    document.body.style.cursor = 'default';
-  });
-
-  hud.addEventListener('mouseleave', () => {
-    const menu = document.getElementById('message');
-
-    if (menu && getComputedStyle(menu).display === 'none') {
-      if (crosshair) crosshair.style.display = 'block';
-      document.body.style.cursor = 'none';
-    }
-  });
-}
-
-document.querySelectorAll('button').forEach(btn => {
-
-  btn.addEventListener('mouseenter', () => {
-    const c = document.getElementById('customCrosshair');
-    if (c) c.style.display = 'none';
-    document.body.style.cursor = 'default';
-  });
-
-  btn.addEventListener('mouseleave', () => {
-    const c = document.getElementById('customCrosshair');
-    const menu = document.getElementById('message');
-
-    if (
-      c &&
-      menu &&
-      getComputedStyle(menu).display === 'none'
-    ) {
-      c.style.display = 'block';
-      document.body.style.cursor = 'none';
-    }
-  });
-
-});
-
-document.addEventListener('mousemove', function(e) {
-
-  const hud = document.getElementById('hud');
-  const c = document.getElementById('customCrosshair');
-
-  if (!hud || !c) return;
-
-  const r = hud.getBoundingClientRect();
-
-  const overHud =
-    e.clientX >= r.left &&
-    e.clientX <= r.right &&
-    e.clientY >= r.top &&
-    e.clientY <= r.bottom;
-
-  if (overHud) {
-    c.style.display = 'none';
-    document.body.style.cursor = 'default';
-  } else {
-    const menu = document.getElementById('message');
-
-    if (menu && getComputedStyle(menu).display === 'none') {
-      c.style.display = 'block';
-      document.body.style.cursor = 'none';
-    }
-  }
-
-});
