@@ -138,3 +138,21 @@
   window.setInterval(updateMode, 250);
   updateMode();
 })();
+
+const hud = document.getElementById('hud');
+
+if (hud) {
+  hud.addEventListener('mouseenter', () => {
+    if (crosshair) crosshair.style.display = 'none';
+    document.body.style.cursor = 'default';
+  });
+
+  hud.addEventListener('mouseleave', () => {
+    const menu = document.getElementById('message');
+
+    if (menu && getComputedStyle(menu).display === 'none') {
+      if (crosshair) crosshair.style.display = 'block';
+      document.body.style.cursor = 'none';
+    }
+  });
+}
