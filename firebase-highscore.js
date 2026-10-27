@@ -47,3 +47,9 @@ async function startFirebaseTest() {
 }
 
 startFirebaseTest();
+
+
+async function saveOnlineScore(name,score){if(!window.ufoFirebase||window.ufoFirebase.status!=="ONLINE")return;const d=await import(CDN+"firebase-database.js");name=String(name||"Spieler").trim().slice(0,18)||"Spieler";score=Math.floor(Number(score)||0);if(!score)return;await d.push(d.ref(window.ufoFirebase.db,"highscores"),{name:name,score:score,timestamp:d.serverTimestamp()});console.log("Online-Highscore gespeichert:",name,score);}
+async function loadOnlineScores(){if(!window.ufoFirebase||window.ufoFirebase.status!=="ONLINE")return;const d=await import(CDN+"firebase-database.js");const q=d.query(d.ref(window.ufoFirebase.db,"highscores"),d.orderByChild("score"),d.limitToLast(10));d.onValue(q,function(s){let a=[];s.forEach(function(c){let v=c.val();if(v&&typeof v.score==="number")a.push(v);});a.sort(function(x,y){return y.score-x.score;});window.onlineHighscores=a;console.log("ONLINE TOP 10:",a);});}
+window.saveOnlineScore=saveOnlineScore;
+var onlineTimer=setInterval(function(){if(window.ufoFirebase&&window.ufoFirebase.status==="ONLINE"){clearInterval(onlineTimer);loadOnlineScores();}},250);
