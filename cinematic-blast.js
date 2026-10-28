@@ -23,6 +23,31 @@ window.cinematicBlast = function (x, y) {
   document.body.appendChild(fireball);
   document.body.appendChild(wave);
 
+  var redParticles=[];
+  Array.from({length:36}).forEach(function(){
+    var drop=document.createElement("div");
+    var angle=Math.random()*Math.PI*2;
+    var distance=35+Math.random()*105;
+    var width=3+Math.random()*7;
+    var height=width*(1.4+Math.random()*2.2);
+
+    drop.style.cssText=
+      "position:fixed;left:"+x+"px;top:"+y+"px;"+
+      "width:"+width+"px;height:"+height+"px;"+
+      "border-radius:55% 45% 65% 35%;"+
+      "background:"+(Math.random()>.45?"#8b0013":"#4b0009")+";"+
+      "box-shadow:0 0 4px rgba(120,0,15,.75);"+
+      "z-index:999993;pointer-events:none;"+
+      "transform:translate(-50%,-50%) rotate("+Math.floor(Math.random()*360)+"deg) scale(.3);"+
+      "opacity:.95;transition:transform .72s ease-out,opacity .95s ease-in";
+
+    drop.dataset.tx=String(Math.cos(angle)*distance);
+    drop.dataset.ty=String(Math.sin(angle)*distance+15+Math.random()*55);
+
+    document.body.appendChild(drop);
+    redParticles.push(drop);
+  });
+
   var canvas = document.getElementById("game");
   if (canvas) {
     canvas.animate(
@@ -44,10 +69,17 @@ window.cinematicBlast = function (x, y) {
     fireball.style.opacity = "0";
     wave.style.transform = "translate(-50%,-50%) scale(15)";
     wave.style.opacity = "0";
+
+    redParticles.forEach(function(drop){
+      drop.style.transform=
+        "translate(calc(-50% + "+drop.dataset.tx+"px),calc(-50% + "+drop.dataset.ty+"px)) rotate(520deg) scale(1)";
+      drop.style.opacity="0";
+    });
   });
 
   setTimeout(function () {
     flash.remove();
     wave.remove();
+    redParticles.forEach(function(drop){drop.remove();});
   }, 650);
 };
